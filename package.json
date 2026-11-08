@@ -1,0 +1,16 @@
+{
+  "name": "agent-cage",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Keep a personal AI agent in a box: read-only filesystem, default-deny network, a token that stays out of docker inspect, and fire drills that prove the cage holds.",
+  "license": "MIT",
+  "author": "Jay Sueno",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:docker": "bash tests/docker-drills.sh",
+    "images": "node docs/img/make.mjs"
+  }
+}

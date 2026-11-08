@@ -1,0 +1,3 @@
+#!/bin/sh
+# A stand-in for logger in the tests, so nothing reaches the real system log.
+echo "logger $*" >>"${STUB_STATE:-/dev/null}/calls" 2>/dev/null || true

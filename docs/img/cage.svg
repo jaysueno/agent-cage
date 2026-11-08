@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="520" viewBox="0 0 1200 520" role="img" aria-labelledby="title desc">
+<title id="title">What the caged agent can reach</title>
+<desc id="desc">The agent container runs as uid 10001 on a read-only root with every capability dropped; it can reach only the host proxy, which allows one listed hostname, and one tailnet host and port; every other destination, including the host's other ports, is rejected.</desc>
+<rect x="0" y="0" width="1200" height="520" fill="#EDE7DC"/>
+<rect x="1" y="1" width="1198" height="518" fill="#001B3B"/>
+<text x="40" y="58" font-family="Georgia, 'Playfair Display', serif" font-size="32" fill="#F2EDE2">Two doors out. Every other way is rejected.</text>
+<text x="40" y="90" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">What the agent container can reach, on the host and off it, and what holds it in place.</text>
+<rect x="40" y="124" width="420" height="330" fill="#EDE7DC"/>
+<rect x="42" y="126" width="416" height="326" fill="#001B3B"/>
+<text x="64" y="162" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#F2EDE2">the agent container</text>
+<text x="64" y="202" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">runs as uid 10001, never root</text>
+<text x="64" y="238" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">read-only root filesystem</text>
+<text x="64" y="274" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">every capability dropped</text>
+<text x="64" y="310" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">no-new-privileges</text>
+<text x="64" y="346" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">memory and process limits</text>
+<text x="64" y="382" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">writes: its home, the outbox, /tmp</text>
+<text x="64" y="418" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">token read from a file, in process</text>
+<rect x="680" y="124" width="480" height="96" fill="#59591D"/>
+<text x="704" y="160" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#F2EDE2">the proxy on the host</text>
+<text x="704" y="190" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="18" fill="#F2EDE2">one allowlisted chat API host, HTTPS on 443</text>
+<rect x="460" y="170" width="204" height="4" fill="#EDE7DC"/>
+<polygon points="680,172 664,163 664,181" fill="#EDE7DC"/>
+<text x="570" y="158" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" text-anchor="middle" fill="#D8D3CA">ufw: proxy port only</text>
+<rect x="680" y="240" width="480" height="96" fill="#59591D"/>
+<text x="704" y="276" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#F2EDE2">one tailnet host and port</text>
+<text x="704" y="306" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="18" fill="#F2EDE2">your model server, nothing else there</text>
+<rect x="460" y="286" width="204" height="4" fill="#EDE7DC"/>
+<polygon points="680,288 664,279 664,297" fill="#EDE7DC"/>
+<text x="570" y="274" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" text-anchor="middle" fill="#D8D3CA">two rules above Tailscale</text>
+<rect x="680" y="356" width="480" height="98" fill="#8C5348"/>
+<text x="704" y="392" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#F2EDE2">everything else: REJECT</text>
+<text x="704" y="422" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="18" fill="#F2EDE2">the internet, the rest of the tailnet,</text>
+<text x="704" y="444" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="18" fill="#F2EDE2">cloud metadata, the host's other ports</text>
+<rect x="460" y="403" width="212" height="4" fill="#8C5348"/>
+<rect x="672" y="387" width="8" height="36" fill="#8C5348"/>
+<text x="570" y="391" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" text-anchor="middle" fill="#D8D3CA">both firewalls: REJECT</text>
+<text x="40" y="494" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#F2EDE2">Proved by verify-cage.sh: five fire drills, one PASS or FAIL line each, run on every apply.</text>
+</svg>

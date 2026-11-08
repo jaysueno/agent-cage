@@ -1,0 +1,11 @@
+# proxy-allowlist.messenger: the smallest door. One API host, nothing else.
+#
+# This is the allowlist for an agent that only talks to you through a chat app. Replace the
+# example line with your chat provider's API host. Rules for every line (tinyproxy 1.11,
+# FilterType ere, FilterDefaultDeny Yes):
+#   - each line is a POSIX extended regex, matched case-insensitively against the bare
+#     hostname (no port, no user, no brackets);
+#   - matching is unanchored, so anchor every line with ^ and $, or "api.example.com" would
+#     also allow "api.example.com.attacker.net";
+#   - escape every dot; keep lines under 512 bytes; no spaces and no unescaped # in a pattern.
+^api\.example\.com$

@@ -1,0 +1,11 @@
+# Runs agent-cage-guard.service 45 seconds after boot, then every 60 seconds.
+[Unit]
+Description=agent-cage: re-assert the tailnet rules every minute
+
+[Timer]
+OnBootSec=45
+OnUnitActiveSec=60
+AccuracySec=15
+
+[Install]
+WantedBy=timers.target

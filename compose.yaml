@@ -1,0 +1,119 @@
+# The cage. apply.sh brings it up; compose alone is not the whole cage, because the egress
+# rules, the tailnet guard and the proxy live on the host. Read README.md before running this
+# by hand.
+#
+#   docker compose --env-file cage.env up -d                        # the agent
+#   docker compose --env-file cage.env --profile verify run --rm verify   # the fire drills
+#
+# Every value in ${...} comes from cage.env (see cage.env.example). Nothing here holds a
+# secret, and nothing here may use env_file: an env_file entry copies its values into the
+# container's configuration. That is how a token was exposed in docker inspect on 2026-08-27
+# (README, "How it works").
+
+name: agent-cage
+
+services:
+  agent:
+    image: ${AGENT_IMAGE}
+    container_name: agent
+    hostname: agent
+    # Docker's init reaps zombies; agents spawn subprocesses for their tools.
+    init: true
+    # The entrypoint is bind-mounted read-only from the host, so it does not depend on the
+    # image and the agent cannot edit it. It loads the token, then runs AGENT_COMMAND.
+    entrypoint: ["/cage/entrypoint.sh"]
+    command: ${AGENT_COMMAND}
+
+    # The host's agent user. Never root.
+    user: "${AGENT_UID}:${AGENT_GID}"
+
+    # Nothing is writable except the two folders below and a small /tmp.
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=128m
+
+    # memswap_limit equal to mem_limit means no swap. Docker refuses to start a container
+    # whose memswap_limit is below its mem_limit, so the two move together.
+    mem_limit: ${AGENT_MEM_LIMIT}
+    memswap_limit: ${AGENT_MEM_LIMIT}
+    pids_limit: 512
+    cpus: 2.0
+
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+
+    environment:
+      HOME: /home/agent
+      # The proxy listens on the host. Inside the container, localhost is the container, so
+      # the agent reaches the host at the cage network's gateway.
+      HTTPS_PROXY: "http://${CAGE_GATEWAY}:${PROXY_PORT}"
+      HTTP_PROXY: "http://${CAGE_GATEWAY}:${PROXY_PORT}"
+      https_proxy: "http://${CAGE_GATEWAY}:${PROXY_PORT}"
+      http_proxy: "http://${CAGE_GATEWAY}:${PROXY_PORT}"
+      # The tailnet host is reached directly, never through the proxy (the proxy refuses
+      # private addresses by construction).
+      NO_PROXY: "${TAILNET_ALLOW_HOST},${CAGE_GATEWAY},localhost"
+      no_proxy: "${TAILNET_ALLOW_HOST},${CAGE_GATEWAY},localhost"
+      # Where entrypoint.sh finds the token, and which lines it may take. Names only.
+      CAGE_TOKEN_FILE: "${CAGE_TOKEN_FILE}"
+      CAGE_TOKEN_KEYS: "${CAGE_TOKEN_KEYS}"
+
+    volumes:
+      # The token file: root-owned, group agent, 0640 on the host, read-only here.
+      - ${TOKEN_HOST_FILE}:${CAGE_TOKEN_FILE}:ro
+      - ./entrypoint.sh:/cage/entrypoint.sh:ro
+      - ./verify-cage.sh:/cage/verify-cage.sh:ro
+      # The agent's state: memory, sessions, its own config.
+      - ${AGENT_HOME_DIR}:/home/agent:rw
+      # Drafts for a human to review. Outside the home folder, so the reviewer's pull job
+      # never needs to read the agent's state.
+      - ${AGENT_OUTBOX_DIR}:/outbox:rw
+
+    # No ports. The agent is a client: it polls its chat API through the proxy and opens no
+    # listening socket. If an agent ever needs one, publish it to localhost only.
+
+    networks:
+      - cage
+
+    restart: unless-stopped
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # The fire drills, on demand. Same network, same user, same hardening as the agent, on a
+  # stock Python image, so the drills test the cage and not whatever the agent image ships.
+  verify:
+    profiles: ["verify"]
+    image: python:3.12-slim
+    user: "${AGENT_UID}:${AGENT_GID}"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    mem_limit: 256m
+    pids_limit: 64
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    working_dir: /tmp
+    entrypoint: ["bash", "/cage/verify-cage.sh"]
+    environment:
+      VERIFY_EGRESS_URL: "${VERIFY_EGRESS_URL}"
+      VERIFY_TAILNET_HOST: "${VERIFY_TAILNET_HOST}"
+      VERIFY_TAILNET_PORT: "${VERIFY_TAILNET_PORT}"
+      VERIFY_TOKEN_VARS: "${VERIFY_TOKEN_VARS}"
+    volumes:
+      - ./verify-cage.sh:/cage/verify-cage.sh:ro
+    networks:
+      - cage
+    restart: "no"
+
+networks:
+  # Created by apply.sh with the fixed CAGE_SUBNET before the firewall rules name it, so
+  # compose only joins it.
+  cage:
+    name: agent-cage
+    external: true

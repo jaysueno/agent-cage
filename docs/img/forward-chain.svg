@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="540" viewBox="0 0 1200 540" role="img" aria-labelledby="title desc">
+<title id="title">Tailscale's forward chain above Docker's</title>
+<desc id="desc">Before the fix, the FORWARD chain sent cage traffic to Tailscale first, which accepted every packet bound for the tailnet before the cage rule in DOCKER-USER could reject it; after the fix, two cage rules sit above the Tailscale jump and a guard re-asserts them every 60 seconds.</desc>
+<rect x="0" y="0" width="1200" height="540" fill="#EDE7DC"/>
+<rect x="1" y="1" width="1198" height="538" fill="#001B3B"/>
+<text x="40" y="58" font-family="Georgia, 'Playfair Display', serif" font-size="30" fill="#F2EDE2">The hole: Tailscale's forward chain sat above Docker's</text>
+<text x="40" y="90" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#D8D3CA">The FORWARD chain, top to bottom, for a packet from the cage to a tailnet machine.</text>
+<text x="40" y="136" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#F2EDE2">Before</text>
+<text x="40" y="162" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" fill="#D8D3CA">found on August 27, 2026</text>
+<rect x="40" y="182" width="520" height="60" fill="#8C5348"/>
+<text x="60" y="208" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#F2EDE2">1  -j ts-forward</text>
+<text x="84" y="231" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" fill="#F2EDE2">accepts everything out tailscale0: the packet ends here</text>
+<rect x="40" y="254" width="520" height="60" fill="#D8D3CA"/>
+<rect x="42" y="256" width="516" height="56" fill="#001B3B"/>
+<text x="60" y="280" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#F2EDE2">2  -j DOCKER-USER</text>
+<text x="84" y="303" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" fill="#D8D3CA">the cage's REJECT: never reached for tailnet traffic</text>
+<rect x="40" y="326" width="520" height="60" fill="#D8D3CA"/>
+<rect x="42" y="328" width="516" height="56" fill="#001B3B"/>
+<text x="60" y="352" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#F2EDE2">3  Docker's own chains</text>
+<text x="84" y="375" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" fill="#D8D3CA">never reached either</text>
+<text x="640" y="136" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" fill="#F2EDE2">After</text>
+<text x="640" y="162" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="17" fill="#D8D3CA">two rules above the jump</text>
+<rect x="640" y="182" width="520" height="60" fill="#59591D"/>
+<text x="660" y="208" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#F2EDE2">1  ACCEPT  cage to one host:port</text>
+<text x="684" y="231" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" fill="#F2EDE2">out tailscale0, TCP, one port</text>
+<rect x="640" y="254" width="520" height="60" fill="#59591D"/>
+<text x="660" y="280" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#F2EDE2">2  REJECT  cage to anything else</text>
+<text x="684" y="303" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" fill="#F2EDE2">out tailscale0</text>
+<rect x="640" y="326" width="520" height="60" fill="#D8D3CA"/>
+<rect x="642" y="328" width="516" height="56" fill="#001B3B"/>
+<text x="660" y="352" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#F2EDE2">3  -j ts-forward</text>
+<text x="684" y="375" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" fill="#D8D3CA">still handles the host's own traffic</text>
+<rect x="640" y="398" width="520" height="60" fill="#D8D3CA"/>
+<rect x="642" y="400" width="516" height="56" fill="#001B3B"/>
+<text x="660" y="424" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" font-weight="700" fill="#F2EDE2">4  -j DOCKER-USER</text>
+<text x="684" y="447" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="16" fill="#D8D3CA">the cage's egress rules for everything off the tailnet</text>
+<text x="40" y="488" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#F2EDE2">tailscaled puts its jump back at position 1 every time it starts.</text>
+<text x="40" y="516" font-family="-apple-system, 'Helvetica Neue', Helvetica, Arial, sans-serif" font-size="19" fill="#F2EDE2">tailnet-guard.sh restores the order every 60 seconds, at boot, and 5 seconds after tailscaled starts.</text>
+</svg>

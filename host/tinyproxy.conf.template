@@ -1,0 +1,38 @@
+# tinyproxy.conf for the agent cage. apply.sh renders this template into
+# /etc/tinyproxy/tinyproxy.conf (the first original is kept as tinyproxy.conf.bak-agent-cage).
+# Placeholders: @PROXY_PORT@, @CAGE_SUBNET@, @ALLOWLIST@.
+#
+# There is no Listen line on purpose. tinyproxy then binds every address, which survives a
+# reboot where tinyproxy starts before Docker has created the cage bridge (a Listen on the
+# bridge's gateway would fail at that moment and stay down). Three things keep that from being
+# an open proxy, and each holds on its own:
+#   1. Allow below: the only client tinyproxy serves is the cage subnet.
+#   2. ufw: default deny incoming; apply.sh opens the proxy port to the cage subnet only, and
+#      refuses to continue if the port is open to anywhere.
+#   3. The filter: even the cage reaches only the hostnames in the allowlist.
+User tinyproxy
+Group tinyproxy
+Port @PROXY_PORT@
+Timeout 600
+DefaultErrorFile "/usr/share/tinyproxy/default.html"
+StatFile "/usr/share/tinyproxy/stats.html"
+LogFile "/var/log/tinyproxy/tinyproxy.log"
+# Connect logs one line per CONNECT with its hostname: the record of where the cage talked.
+LogLevel Connect
+PidFile "/run/tinyproxy/tinyproxy.pid"
+MaxClients 100
+
+# WHO may use the proxy (the client, not the destination).
+Allow @CAGE_SUBNET@
+
+ViaProxyName "tinyproxy"
+
+# WHERE it may go. FilterDefaultDeny Yes turns the file into an allowlist: the first matching
+# line allows, no match blocks, and there is no deny syntax at all.
+Filter "@ALLOWLIST@"
+FilterType ere
+FilterDefaultDeny Yes
+
+# HTTPS through the proxy (CONNECT) may only reach port 443, whatever host is named. Plain
+# HTTP can name any port; refusing IP literals and single-label names is the filter's job.
+ConnectPort 443

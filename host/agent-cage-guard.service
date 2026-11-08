@@ -1,0 +1,9 @@
+# Re-asserts the cage's tailnet rules at the top of FORWARD. Installed by apply.sh, which
+# replaces @CAGE_DIR@ with the folder holding tailnet-guard.sh and cage.env.
+[Unit]
+Description=agent-cage: keep the tailnet rules above Tailscale's forward chain
+After=tailscaled.service docker.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/env bash @CAGE_DIR@/tailnet-guard.sh

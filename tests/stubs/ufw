@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# A stand-in for ufw in the tests. It keeps the rule list in order in $STUB_STATE/ufw (one rule
+# spec per line, comment dropped), prints it the way `ufw status` does, and logs every call to
+# $STUB_STATE/calls. Supports: status, status numbered, allow, reject, insert N, delete.
+set -u
+st="${STUB_STATE:?}"
+echo "ufw $*" >>"$st/calls"
+db="$st/ufw"
+touch "$db"
+[ "${1:-}" = "--force" ] && shift
+
+spec() {  # the rule words without a trailing comment
+  local out=() w
+  while [ $# -gt 0 ]; do
+    [ "$1" = comment ] && break
+    out+=("$1"); shift
+  done
+  echo "${out[*]}"
+}
+
+render() {  # one stored spec -> one `ufw status` line
+  set -- $1
+  local action="$1" from="" to="Anywhere" port=""
+  shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      from) from="$2"; shift 2 ;;
+      to) to="$2"; shift 2 ;;
+      port) port="$2"; shift 2 ;;
+      proto) shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  [ -n "$port" ] && to="$to $port/tcp"
+  printf '%-26s %-11s %s\n' "$to" "$(echo "$action" | tr a-z A-Z)" "$from"
+}
+
+case "${1:-}" in
+  status)
+    echo "Status: active"
+    if [ "${2:-}" = numbered ]; then
+      n=0
+      while read -r r; do n=$((n + 1)); printf '[%2d] %s\n' "$n" "$(render "$r")"; done <"$db"
+    else
+      echo
+      echo "To                         Action      From"
+      echo "--                         ------      ----"
+      while read -r r; do render "$r"; done <"$db"
+    fi
+    ;;
+  allow | reject | deny) spec "$@" >>"$db" ;;
+  insert)
+    pos="$2"; shift 2
+    count="$(grep -c . "$db" || true)"
+    if [ "$pos" -lt 1 ] || [ "$pos" -gt "$count" ]; then echo "ERROR: Invalid position '$pos'" >&2; exit 1; fi
+    line="$(spec "$@")"
+    awk -v n="$pos" -v l="$line" 'NR == n { print l } { print }' "$db" >"$db.t" && mv "$db.t" "$db"
+    ;;
+  delete)
+    shift
+    line="$(spec "$@")"
+    grep -qxF -- "$line" "$db" || { echo "Could not delete non-existent rule" >&2; exit 1; }
+    awk -v l="$line" '!d && $0 == l { d = 1; next } { print }' "$db" >"$db.t" && mv "$db.t" "$db"
+    ;;
+esac
+exit 0
